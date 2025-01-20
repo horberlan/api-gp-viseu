@@ -7,6 +7,6 @@ interface ZipcodeData {
   region: string;
   ibgeCode: string;
   areaCode: string;
-  latitude: string;
-  longitude: string;
+  lat: string;
+  lng: string;
 }

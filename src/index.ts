@@ -3,12 +3,12 @@ import { cors } from "@elysiajs/cors";
 
 const app: Elysia = new Elysia()
   .use(cors())
-  .get("/zipcode/:code", async ({ params: { code }, error }: any) => {
-    const format: string = "json";
+  .get("/zipcode/:code", async ({ params: { code }, error }) => {
+    const format = "json";
 
     const urls: string[] = [
       `${process.env.APICEP}/${code}.${format}`,
-      `${process.env.VIACEP}/${code}/${format}/`,
+      `${process.env.VIACEP}/${code}/${format}`,
       `${process.env.AWESOMEAPI}/${format}/${code}`,
     ];
 
@@ -16,7 +16,7 @@ const app: Elysia = new Elysia()
       try {
         const response: Response = await fetch(url);
         if (response.ok) {
-          const data: any = await response.json();
+          const data = await response.json();
           const standardized: ZipcodeData = standardizeData(data);
 
           if (isValidZipcodeData(standardized)) {
@@ -26,7 +26,7 @@ const app: Elysia = new Elysia()
         } else {
           throw new Error(`Request to ${url} failed with status ${response.status}`);
         }
-      } catch (error) {
+      } catch (error: { message: string } | any) {
         console.error(error.message);
         throw error;
       }
@@ -39,7 +39,7 @@ const app: Elysia = new Elysia()
       .map((result: PromiseSettledResult<ZipcodeData>) => (result as PromiseFulfilledResult<ZipcodeData>).value);
 
     if (successfulResults.length > 0) {
-      return successfulResults[0];
+      return successfulResults[ 0 ];
     } else {
       return error(404, "No valid response from zipcode APIs");
     }
@@ -55,12 +55,12 @@ function standardizeData(data: any): ZipcodeData {
     region: data.regiao,
     ibgeCode: data.ibge || data.city_ibge,
     areaCode: data.ddd,
-    latitude: data.lat,
-    longitude: data.lng,
+    lat: data.lat,
+    lng: data.lng,
   };
 }
 
-function isValidZipcodeData(data: any): boolean {
+function isValidZipcodeData(data: Partial<ZipcodeData>): boolean {
   return !!(data.zipCode && data.city && data.state);
 }
 
