@@ -1,23 +1,23 @@
-import { Elysia } from "elysia";
+import { Elysia, ERROR_CODE } from "elysia";
 import { cors } from "@elysiajs/cors";
 
-const app = new Elysia()
+const app: Elysia = new Elysia()
   .use(cors())
-  .get("/zipcode/:code", async ({ params: { code }, set }) => {
-    const format = "json";
+  .get("/zipcode/:code", async ({ params: { code }, error }: any) => {
+    const format: string = "json";
 
-    const urls = [
+    const urls: string[] = [
       `${process.env.APICEP}/${code}.${format}`,
       `${process.env.VIACEP}/${code}/${format}/`,
       `${process.env.AWESOMEAPI}/${format}/${code}`,
     ];
 
-    const promises = urls.map(async (url) => {
+    const promises: Promise<ZipcodeData>[] = urls.map(async (url: string) => {
       try {
-        const response = await fetch(url);
+        const response: Response = await fetch(url);
         if (response.ok) {
-          const data = await response.json();
-          const standardized = standardizeData(data);
+          const data: any = await response.json();
+          const standardized: ZipcodeData = standardizeData(data);
 
           if (isValidZipcodeData(standardized)) {
             return standardized;
@@ -32,21 +32,20 @@ const app = new Elysia()
       }
     });
 
-    const results = await Promise.allSettled(promises);
+    const results: PromiseSettledResult<ZipcodeData>[] = await Promise.allSettled(promises);
 
-    const successfulResults = results
-      .filter((result) => result.status === "fulfilled")
-      .map((result) => (result as PromiseFulfilledResult<any>).value);
+    const successfulResults: ZipcodeData[] = results
+      .filter((result: PromiseSettledResult<ZipcodeData>) => result.status === "fulfilled")
+      .map((result: PromiseSettledResult<ZipcodeData>) => (result as PromiseFulfilledResult<ZipcodeData>).value);
 
     if (successfulResults.length > 0) {
       return successfulResults[0];
     } else {
-      set.status = 404;
-      return { error: "No valid response from zipcode APIs" };
+      return error(404, "No valid response from zipcode APIs");
     }
   });
 
-function standardizeData(data) {
+function standardizeData(data: any): ZipcodeData {
   return {
     zipCode: data.cep || data.address,
     street: data.logradouro || data.address_name || data.address,
