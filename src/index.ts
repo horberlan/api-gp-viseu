@@ -25,7 +25,9 @@ const app: Elysia = new Elysia({ normalize: true })
           }
           throw new Error("invalid data structure from API");
         } else {
-          throw new Error(`Request to ${url} failed with status ${response.status}`);
+          throw new Error(
+            `Request to ${url} failed with status ${response.status}`
+          );
         }
       } catch (error: { message: string } | any) {
         console.error(error.message);
@@ -33,14 +35,22 @@ const app: Elysia = new Elysia({ normalize: true })
       }
     });
 
-    const results: PromiseSettledResult<ZipcodeData>[] = await Promise.allSettled(promises);
+    const results: PromiseSettledResult<ZipcodeData>[] =
+      await Promise.allSettled(promises);
 
     const successfulResults: ZipcodeData[] = results
-      .filter((result: PromiseSettledResult<ZipcodeData>) => result.status === "fulfilled")
-      .map((result: PromiseSettledResult<ZipcodeData>) => (result as PromiseFulfilledResult<ZipcodeData>).value);
+      .filter(
+        (result: PromiseSettledResult<ZipcodeData>) =>
+          result.status === "fulfilled"
+      )
+      .map(
+        (result: PromiseSettledResult<ZipcodeData>) =>
+          (result as PromiseFulfilledResult<ZipcodeData>).value
+      );
 
     if (successfulResults.length > 0) {
-      return successfulResults[ 0 ];
+      const mergedResult = mergeResults(successfulResults);
+      return mergedResult;
     } else {
       return error(404, "No valid response from zipcode APIs");
     }
@@ -64,8 +74,19 @@ function standardizeData(data: any): ZipcodeData {
 function isValidZipcodeData(data: Partial<ZipcodeData>): boolean {
   return !!(data.zipCode && data.city && data.state);
 }
+function mergeResults(results: ZipcodeData[]): ZipcodeData {
+  return results.reduce((merged: ZipcodeData, current: ZipcodeData) => {
+    Object.keys(current).forEach(
+      (key: keyof typeof current | keyof typeof merged) => {
+        if (merged[key] === undefined && current[key] !== undefined) {
+          merged[key] = current[key];
+        }
+      }
+    );
+    return merged;
+  }, {} as ZipcodeData);
+}
 
-// const api = treaty<typeof app>('localhost:3000') # <- i can use like this...
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
 });
