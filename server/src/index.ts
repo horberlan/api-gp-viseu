@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
-import type { ZipcodeData } from "./types";
+import type { ZipcodeData } from "../types";
 
 const app: Elysia = new Elysia({ normalize: true })
   .use(cors())
@@ -29,8 +29,7 @@ const app: Elysia = new Elysia({ normalize: true })
             `Request to ${url} failed with status ${response.status}`
           );
         }
-      } catch (error: { message: string } | any) {
-        console.error(error.message);
+      } catch (error) {
         throw error;
       }
     });
@@ -76,10 +75,10 @@ function isValidZipcodeData(data: Partial<ZipcodeData>): boolean {
 }
 function mergeResults(results: ZipcodeData[]): ZipcodeData {
   return results.reduce((merged: ZipcodeData, current: ZipcodeData) => {
-    Object.keys(current).forEach(
-      (key: keyof typeof current | keyof typeof merged) => {
-        if (merged[key] === undefined && current[key] !== undefined) {
-          merged[key] = current[key];
+    Object.entries(current).forEach(
+      ([ key, value ]) => {
+        if (merged[ key as keyof ZipcodeData ] === undefined && value !== undefined) {
+          merged[ key as keyof ZipcodeData ] = value;
         }
       }
     );
@@ -90,3 +89,6 @@ function mergeResults(results: ZipcodeData[]): ZipcodeData {
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
 });
+
+export type App = typeof app;
+
