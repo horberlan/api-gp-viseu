@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import type { ZipcodeData } from "./types";
 
-const app: Elysia = new Elysia()
+const app: Elysia = new Elysia({ normalize: true })
   .use(cors())
   .get("/zipcode/:code", async ({ params: { code }, error }) => {
     const format = "json";
