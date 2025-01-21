@@ -1,5 +1,6 @@
-import { Elysia, ERROR_CODE } from "elysia";
+import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
+import type { ZipcodeData } from "./types";
 
 const app: Elysia = new Elysia()
   .use(cors())
@@ -64,6 +65,7 @@ function isValidZipcodeData(data: Partial<ZipcodeData>): boolean {
   return !!(data.zipCode && data.city && data.state);
 }
 
+// const api = treaty<typeof app>('localhost:3000') # <- i can use like this...
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
 });
